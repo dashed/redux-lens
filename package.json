@@ -1,0 +1,33 @@
+{
+  "name": "redux-lens",
+  "version": "0.1.0",
+  "description": "Apply a redux reducer and an action at the specified path of your application state tree.",
+  "main": "src/index.js",
+  "repository": "dashed/redux-lens",
+  "author": {
+    "name": "Alberto Leal",
+    "email": "mailforalberto@gmail.com",
+    "url": "github.com/dashed"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "flux-standard-action": "^1.2.0",
+    "lodash": "^4.17.4",
+    "ramda": "^0.23.0"
+  },
+  "devDependencies": {
+    "eslint": "^3.19.0",
+    "redux": "^3.6.0"
+  },
+  "eslintConfig": {
+    "extends": "eslint:recommended",
+    "env": {
+      "browser": true,
+      "node": true,
+      "es6": true
+    }
+  },
+  "scripts": {
+    "eslint": "eslint ./src"
+  }
+}
