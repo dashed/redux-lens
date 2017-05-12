@@ -15,7 +15,9 @@
     "lodash": "^4.17.4"
   },
   "devDependencies": {
+    "chai": "^3.5.0",
     "eslint": "^3.19.0",
+    "mocha": "^3.3.0",
     "redux": "^3.6.0"
   },
   "eslintConfig": {
@@ -27,6 +29,7 @@
     }
   },
   "scripts": {
-    "eslint": "eslint ./src"
+    "eslint": "eslint ./src ./test",
+    "test": "mocha"
   }
 }

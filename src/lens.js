@@ -30,13 +30,14 @@ const assocPath = _.curry(function(path, value, root) {
 
     if (path.length > 1) {
 
-        const sub_root = _.has(next_key, root) ? root[next_key] :
+        const sub_root = _.has(root, next_key) ? root[next_key] :
             _.isInteger(path[1]) ? [] : {};
 
         value = assocPath(Array.prototype.slice.call(path, 1), value, sub_root);
     }
 
     if (_.isInteger(next_key) && _.isArray(root)) {
+        console.log('array')
         const arr = [].concat(root);
         arr[next_key] = value;
         return arr;
