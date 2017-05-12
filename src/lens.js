@@ -37,7 +37,6 @@ const assocPath = _.curry(function(path, value, root) {
     }
 
     if (_.isInteger(next_key) && _.isArray(root)) {
-        console.log('array')
         const arr = [].concat(root);
         arr[next_key] = value;
         return arr;
