@@ -1,4 +1,4 @@
-const { isFSA } = require('flux-standard-action');
+const isFSA = require('flux-standard-action').isFSA;
 
 const L = require('./lens');
 const merge = require('lodash/merge');

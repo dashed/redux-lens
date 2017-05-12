@@ -1,6 +1,6 @@
 const chai = require('chai');
 const expect = chai.expect;
-const {createStore} = require('redux');
+const createStore = require('redux').createStore;
 
 const defaultReducer = (state) => {
     return state;
