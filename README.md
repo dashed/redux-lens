@@ -1,4 +1,4 @@
-# redux-lens
+# redux-lens [![Build Status](https://travis-ci.org/dashed/redux-lens.svg?branch=master)](https://travis-ci.org/dashed/redux-lens)
 
 > Apply a redux reducer and an action at the specified path of your application state tree (i.e. redux store).
 
