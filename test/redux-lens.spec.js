@@ -17,7 +17,7 @@ describe('redux-lens', function() {
     let initialState;
 
     beforeEach(() => {
-        reduxLens = require('../src/index.js');
+        const reduxLens = require('../src/index.js');
 
         reduceIn = reduxLens.reduceIn;
         createReducer = reduxLens.createReducer;
