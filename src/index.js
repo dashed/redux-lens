@@ -1,6 +1,6 @@
 const { isFSA } = require('flux-standard-action');
 
-const R = require('ramda');
+const L = require('./lens');
 const merge = require('lodash/merge');
 const isFunction = require('lodash/isFunction');
 const deleteIn = require('lodash/unset');
@@ -9,16 +9,16 @@ const lodashGetIn = require('lodash/get');
 /* helpers */
 
 const __getIn = (rootData, path) => {
-    const lens = R.lensPath(path);
-    return R.view(lens, rootData);
+    const lens = L.lensPath(path);
+    return L.view(lens, rootData);
 };
 
 // NOTE:
 // - should return new object.
 // - should NOT edit rootData in-place
 const __setIn = (rootData, path, newValue) => {
-    const lens = R.lensPath(path);
-    return R.set(lens, newValue, rootData);
+    const lens = L.lensPath(path);
+    return L.set(lens, newValue, rootData);
 };
 
 const identity = (state) => state;
