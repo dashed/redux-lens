@@ -74,7 +74,7 @@ store.dispatch(reduceIn(['foo', 'bar', 'baz', 1], 'plusTwo', addAction));
 // => {
 //     foo: {
 //         bar: {
-//             baz: [1, 43]
+//             baz: [1, 44]
 //         }
 //     },
 //     counter: 9000
@@ -84,7 +84,7 @@ store.dispatch(reduceIn(['counter'], addReduce, addAction));
 // => {
 //     foo: {
 //         bar: {
-//             baz: [1, 43]
+//             baz: [1, 44]
 //         }
 //     },
 //     counter: 9001
