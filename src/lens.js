@@ -59,7 +59,7 @@ const lensPath = _.curry(function(__path) {
 const Identity = x => ({value: x, map: (mapf) => Identity(mapf(x)) });
 const Const = x => ({value: x, map(){ return this; }});
 //K Combinator!
-const _K = x => _ => x;//y is probably more accurately written as (), but that's longer!
+const _K = x => _ => x;
 
 const over = _.curry((lens, transform, targetData) => {
     return lens(y => Identity(transform(y)))(targetData).value;
