@@ -112,7 +112,7 @@ options = {
     // function to set "new_value" at "path" of "state". (optional)
     set: setter,
 
-    // Plain object mapping aliases to redux reducers.
+    // Plain object mapping aliases to redux reducers. (optional)
     aliases: {
         alias: reducer
     }
