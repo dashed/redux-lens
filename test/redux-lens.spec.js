@@ -29,7 +29,7 @@ describe('redux-lens', function() {
         initialState = {
             foo: {
                 bar: {
-                    baz: [1, 42]
+                    baz: [1, 42, {qux: 33}]
                 }
             },
             counter: 9000
@@ -85,7 +85,7 @@ describe('redux-lens', function() {
         const expected = {
             foo: {
                 bar: {
-                    baz: [1, 42]
+                    baz: [1, 42, {qux: 33}]
                 }
             },
             counter: 9000,
@@ -161,7 +161,7 @@ describe('redux-lens', function() {
         const expected = {
             foo: {
                 bar: {
-                    baz: [3, 'bamboozle']
+                    baz: [3, 'bamboozle', {qux: 33}]
                 }
             },
             counter: 9000
@@ -187,13 +187,15 @@ describe('redux-lens', function() {
 
         store.dispatch(reduceIn(['foo', 'bar', 'baz', 1], addReduce, addAction));
         store.dispatch(reduceIn('foo.bar.baz[1]', addReduce, addAction));
+        store.dispatch(reduceIn('foo.bar.baz[2].qux', addReduce, addAction));
+        store.dispatch(reduceIn(['foo', 'bar', 'baz', 2, 'qux'], addReduce, addAction));
 
         const actual = store.getState();
 
         const expected = {
             foo: {
                 bar: {
-                    baz: [1, 44]
+                    baz: [1, 44, {qux: 35}]
                 }
             },
             counter: 9000

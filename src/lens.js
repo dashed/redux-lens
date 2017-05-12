@@ -6,7 +6,8 @@ const _ = require('lodash');
 
 // https://github.com/ramda/ramda/blob/v0.23.0/src/path.js
 const path = _.curry(function(path, root) {
-    return _.get(root, _.toPath(path));
+    path = _.isArray(path) ? path : _.toPath(path);
+    return _.get(root, path);
 }, 2);
 
 // https://github.com/ramda/ramda/blob/v0.23.0/src/assoc.js
@@ -20,7 +21,7 @@ const assoc = _.curry(function(prop, value, root) {
 // https://github.com/ramda/ramda/blob/v0.23.0/src/assocPath.js
 const assocPath = _.curry(function(path, value, root) {
 
-    path = _.toPath(path);
+    path = _.isArray(path) ? path : _.toPath(path);
 
     if(path.length === 0) {
         return value;
