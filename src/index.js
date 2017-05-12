@@ -1,3 +1,5 @@
+'use strict';
+
 const isFSA = require('flux-standard-action').isFSA;
 
 const L = require('./lens');
