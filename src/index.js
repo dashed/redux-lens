@@ -5,6 +5,7 @@ const merge = require('lodash/merge');
 const isFunction = require('lodash/isFunction');
 const deleteIn = require('lodash/unset');
 const lodashGetIn = require('lodash/get');
+const lodashSetIn = require('lodash/set');
 
 /* helpers */
 
@@ -39,7 +40,8 @@ const reduceIn = (path, reducer, action) => {
         meta: {
             __redux_lens__: {
                 path: path,
-                reducer: reducer, // redux compatible reducer
+                // redux compatible reducer or an alias to a reducer
+                reducer: reducer,
             }
         }
     };
@@ -53,8 +55,7 @@ const isReduceInAction = (action) => {
 
     return isFSA(action) &&
         lodashGetIn(action, ['meta', '__redux_lens__', 'path'], NOT_SET) !== NOT_SET &&
-        reducer !== NOT_SET &&
-        isFunction(reducer);
+        reducer !== NOT_SET;
 };
 
 
@@ -82,16 +83,44 @@ const applyReduceInAction = (getIn, setIn) => (state, action) => {
     return newRoot;
 };
 
+const applyAliases = (action, aliases) => {
+
+    const reducer = lodashGetIn(action, ['meta', '__redux_lens__', 'reducer']);
+
+    if(isFunction(reducer)) {
+        return action;
+    }
+
+    // reducer may be an alias
+    const resolvedReducer = lodashGetIn(aliases, [reducer], NOT_SET);
+
+    if(resolvedReducer === NOT_SET) {
+        throw Error(`Alias not found: ${reducer}`);
+    }
+
+    if(!isFunction(resolvedReducer)) {
+        throw Error(`Reducer mapped to alias '${reducer}' is not a function: ${resolvedReducer}`);
+    }
+
+    return lodashSetIn(action, ['meta', '__redux_lens__', 'reducer'], resolvedReducer);
+};
+
 const createReducer = (options) => {
 
     const setIn = lodashGetIn(options, ['set'], __setIn);
     const getIn = lodashGetIn(options, ['get'], __getIn);
+    const aliases = lodashGetIn(options, ['aliases'], NOT_SET);
 
     const __applyReduceInAction = applyReduceInAction(getIn, setIn);
 
     const reducer = (state, action) => {
 
         if(isReduceInAction(action)) {
+
+            if(aliases !== NOT_SET) {
+                action = applyAliases(action, aliases);
+            }
+
             return __applyReduceInAction(state, action);
         }
 
