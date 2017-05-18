@@ -31,6 +31,11 @@ const identity = (state) => state;
 // sentinel value
 const NOT_SET = {};
 
+// constants
+
+const path_to_redux_lens_path = ['meta', '__redux_lens__', 'path'];
+const path_to_redux_lens_reducer = ['meta', '__redux_lens__', 'reducer'];
+
 // action creator
 const reduceIn = (path, reducer, action) => {
 
@@ -53,20 +58,19 @@ const reduceIn = (path, reducer, action) => {
 
 const isReduceInAction = (action) => {
 
-    const reducer = lodashGetIn(action, ['meta', '__redux_lens__', 'reducer'], NOT_SET);
+    const reducer = lodashGetIn(action, path_to_redux_lens_reducer, NOT_SET);
 
     return isFSA(action) &&
-        lodashGetIn(action, ['meta', '__redux_lens__', 'path'], NOT_SET) !== NOT_SET &&
+        lodashGetIn(action, path_to_redux_lens_path, NOT_SET) !== NOT_SET &&
         reducer !== NOT_SET;
 };
-
 
 const applyReduceInAction = (getIn, setIn) => (state, action) => {
 
     // invariant: lodashGetIn(action, ['meta', '__redux_lens__'], NOT_SET) !== NOT_SET
 
-    const path = lodashGetIn(action, ['meta', '__redux_lens__', 'path']);
-    const reducer = lodashGetIn(action, ['meta', '__redux_lens__', 'reducer']);
+    const path = lodashGetIn(action, path_to_redux_lens_path);
+    const reducer = lodashGetIn(action, path_to_redux_lens_reducer);
 
     deleteIn(action, ['meta', '__redux_lens__']);
 
@@ -87,7 +91,7 @@ const applyReduceInAction = (getIn, setIn) => (state, action) => {
 
 const applyAliases = (action, aliases) => {
 
-    const reducer = lodashGetIn(action, ['meta', '__redux_lens__', 'reducer']);
+    const reducer = lodashGetIn(action, path_to_redux_lens_reducer);
 
     if(isFunction(reducer)) {
         return action;
@@ -104,7 +108,7 @@ const applyAliases = (action, aliases) => {
         throw Error(`Reducer mapped to alias '${reducer}' is not a function: ${resolvedReducer}`);
     }
 
-    return lodashSetIn(action, ['meta', '__redux_lens__', 'reducer'], resolvedReducer);
+    return lodashSetIn(action, path_to_redux_lens_reducer, resolvedReducer);
 };
 
 const createReducer = (options) => {
