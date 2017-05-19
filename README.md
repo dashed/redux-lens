@@ -159,15 +159,26 @@ lens<P, R, T, U>: getter<P, R, T> => setter<P, U, R> => path<P> => curriedLens<R
 curriedLens<R, T, U>: intoFunctor<T, U> => root<R> => Functor<U>
 intoFunctor<T, U>: sub_root<T> => Functor<U>
 
+getter<P, R, T>: path<P> => root<R> => sub_root<T>
+setter<P, U, R>: path<P> => newValue<U> => root<R> => newRoot<R>
+
 Functor<T>: {
     value: T,
     map: mapf => Functor<U>
 }
 
 mapf<T, U>: T => U
+
+root<R> and newRoot<R> are assumed to be plain objects.
 ```
 
 To learn more about lenses, see: https://medium.com/@dtipson/functional-lenses-d1aba9e52254
+
+**Custom set / get**
+
+`path(path_to_state)` is meant to be used if you **do not** set custom set / get functions via `createReducer(options)`.
+
+Otherwise, this function (i.e. `path(path_to_state)`) is largely useless.
 
 Development
 ===========
