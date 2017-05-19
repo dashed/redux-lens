@@ -1,6 +1,6 @@
 {
   "name": "redux-lens",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "Apply a redux reducer and an action at the specified path of your application state tree.",
   "main": "src/index.js",
   "repository": "dashed/redux-lens",
