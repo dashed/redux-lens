@@ -4,6 +4,10 @@ const _ = require('lodash');
 
 // refs: https://medium.com/@dtipson/functional-lenses-d1aba9e52254
 
+const toPathArray = (path) => {
+    return _.isArray(path) ? path : _.toPath(path);
+}
+
 // path :: P -> R -> T
 //
 // P := path
@@ -11,7 +15,7 @@ const _ = require('lodash');
 // T := value_at_path
 // https://github.com/ramda/ramda/blob/v0.23.0/src/path.js
 const path = _.curry(function(path, root) {
-    path = _.isArray(path) ? path : _.toPath(path);
+    path = toPathArray(path);
     return _.get(root, path);
 }, 2);
 
@@ -38,7 +42,7 @@ const assoc = _.curry(function(key, newValue, root) {
 // https://github.com/ramda/ramda/blob/v0.23.0/src/assocPath.js
 const assocPath = _.curry(function(path, value, root) {
 
-    path = _.isArray(path) ? path : _.toPath(path);
+    path = toPathArray(path);
 
     if(path.length <= 0) {
         return value;
