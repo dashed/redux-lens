@@ -67,8 +67,8 @@ const lens = _.curry((getter, setter, path, intoFunctor, root) => {
 // lens<P, R, T, U>: getter<P, R, T> => setter<P, U, R> => path<P> => curriedLens<R, T, U>
 // curriedLens<R, T, U>: intoFunctor<T, U> => root<R> => Functor<U>
 // intoFunctor<T, U>: sub_root<T> => Functor<U>
-const lensPath = _.curry(function(__path) {
-    return lens(path, assocPath, __path);
+const lensPath = _.curry(function(__path, getter = path, setter = assocPath) {
+    return lens(getter, setter, __path);
 }, 1);
 
 // Identity<T, U>: T => FunctorIdentity<T, U>
