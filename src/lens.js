@@ -4,14 +4,21 @@ const _ = require('lodash');
 
 // refs: https://medium.com/@dtipson/functional-lenses-d1aba9e52254
 
-// path<P, R, T>: path<P> => root<R> => sub_root<T>
+// path :: P -> R -> T
+// P := path
+// R := root
+// T := value_at_path
 // https://github.com/ramda/ramda/blob/v0.23.0/src/path.js
 const path = _.curry(function(path, root) {
     path = _.isArray(path) ? path : _.toPath(path);
     return _.get(root, path);
 }, 2);
 
-// assoc<K, T, R>: key<K> => newValue<T> => root<R>
+// assoc ::  K -> T -> R -> R'
+// K := key
+// T := newValye
+// R := root
+// R' := newRoot
 // https://github.com/ramda/ramda/blob/v0.23.0/src/assoc.js
 const assoc = _.curry(function(key, newValue, root) {
     // shallow clone
@@ -20,7 +27,11 @@ const assoc = _.curry(function(key, newValue, root) {
     return result;
 }, 3);
 
-// assocPath<P, T, R>: path<P> => newValue<T> => root<R> => newRoot<R>
+// assocPath :: P -> T -> R -> R'
+// P := path
+// T := newValue
+// R := root
+// R' := newRoot
 // https://github.com/ramda/ramda/blob/v0.23.0/src/assocPath.js
 const assocPath = _.curry(function(path, value, root) {
 
@@ -50,9 +61,11 @@ const assocPath = _.curry(function(path, value, root) {
 
 }, 3);
 
-// mapWith<T, U>: f<T, U> => xs<T> => Functor<U>
-// f<T, U>: T => U
-// xs<T>: Functor<T>
+// mapWith :: Functor f => G -> xs -> f U
+// G := T -> U
+// T := value
+// U := nextValue
+// xs := f T (note: Functor of type T)
 const mapWith = _.curry((f, xs) => xs.map(f), 2);
 
 // lens<P, R, T, U>: getter<P, R, T> => setter<P, U, R> => path<P> => intoFunctor<T, U> => root<R> => Functor<U>
