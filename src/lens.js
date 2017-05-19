@@ -5,6 +5,7 @@ const _ = require('lodash');
 // refs: https://medium.com/@dtipson/functional-lenses-d1aba9e52254
 
 // path :: P -> R -> T
+//
 // P := path
 // R := root
 // T := value_at_path
@@ -15,6 +16,7 @@ const path = _.curry(function(path, root) {
 }, 2);
 
 // assoc ::  K -> T -> R -> R'
+//
 // K := key
 // T := newValye
 // R := root
@@ -28,6 +30,7 @@ const assoc = _.curry(function(key, newValue, root) {
 }, 3);
 
 // assocPath :: P -> T -> R -> R'
+//
 // P := path
 // T := newValue
 // R := root
@@ -62,58 +65,106 @@ const assocPath = _.curry(function(path, value, root) {
 }, 3);
 
 // mapWith :: Functor f => G -> xs -> f U
+//
 // G := T -> U
 // T := value
 // U := nextValue
 // xs := f T (note: Functor of type T)
-const mapWith = _.curry((f, xs) => xs.map(f), 2);
+// f T := Functor<T>
+// f U := Functor<U>
+//
+// Functor<T>: {
+//     value: T,
+//     map: mapf -> Functor<U>
+// }
+// mapf :: T -> U
+const mapWith = _.curry((G, xs) => xs.map(G), 2);
 
-// lens<P, R, T, U>: getter<P, R, T> => setter<P, U, R> => path<P> => intoFunctor<T, U> => root<R> => Functor<U>
-// getter<P, R, T>: path<P> => root<R> => sub_root<T>
-// setter<P, U, R>: path<P> => newValue<U> => root<R> => newRoot<R>
-// intoFunctor<T, U>: sub_root<T> => Functor<U>
+// lens :: Functor f => getter -> setter -> P -> intoFunctor -> R -> f U
+// getter :: P -> R -> T
+// setter :: P -> U -> R -> R'
+// intoFunctor :: Functor f => T -> f T
+//
+// P := path
+// R := root
+// T := value_at_path
+// U := newValue
+// R' := newRoot
+// f T := Functor<T>
+// f U := Functor<U>
 const lens = _.curry((getter, setter, path, intoFunctor, root) => {
     return mapWith(replacement => setter(path, replacement, root), intoFunctor(getter(path, root)));
 }, 5);
 
-// lensPath<P, R, T, U>: path<P> => curriedLens<R, T, U>
-// lens<P, R, T, U>: getter<P, R, T> => setter<P, U, R> => path<P> => curriedLens<R, T, U>
-// curriedLens<R, T, U>: intoFunctor<T, U> => root<R> => Functor<U>
-// intoFunctor<T, U>: sub_root<T> => Functor<U>
+// lensPath :: Functor f => P -> getter -> setter -> lens
+//
+// lens :: Functor f => intoFunctor -> R -> f U
+// getter :: P -> R -> T (default to path function)
+// setter :: P -> U -> R -> R' (default ot assocPath function)
+// intoFunctor :: Functor f => T -> f T
+//
+// P := path
+// R := root
+// T := value_at_path
+// U := newValue
+// R' := newRoot
+// f T := Functor<T>
+// f U := Functor<U>
 const lensPath = _.curry(function(__path, getter = path, setter = assocPath) {
     return lens(getter, setter, __path);
 }, 1);
 
-// Identity<T, U>: T => FunctorIdentity<T, U>
-// FunctorIdentity<T, U>::map: mapf<T, U> => FunctorIdentity<U>
-// mapf<T, U>: T => U
+// Identity :: Functor f => T -> f T
+// mapf :: T -> U
+// map :: Functor f => mapf -> f U
 const Identity = x => ({value: x, map: (mapf) => Identity(mapf(x)) });
 
-// Const<T, U>: T => FunctorConst<T, U>
-// FunctorConst<T, U>::map: U => FunctorConst<T>
+// Const :: Functor f => T -> f T
+// map :: Functor f => _ -> f T
 const Const = x => ({value: x, map(){ return this; }});
+
 // This is a K Combinator
-// _K<T>: T => _ => T
+// _K :: T -> _ -> T
 const _K = x => _ => x;
 
-// over: lens<P, R, T, U> => transform<T, U> => root<R> => newRoot<R>
-// lens<T, U, R>: intoFunctor<T, U> => root<R> => Functor<U>
-// intoFunctor<T, U>: sub_root<T> => Functor<U>
-// transform<T ,U>: sub_root<T> => new_sub_root<U>
+// over :: lens -> transform -> R -> R'
+// lens :: Functor f => intoFunctor -> R -> f R'
+// intoFunctor :: Functor f => U -> f U
+// transform :: T -> U
+//
+// P := path
+// R := root
+// R' := newRoot
+// T := value_at_path
+// U := newValue
+// f R' := Functor<R'>
+// f U := Functor<U>
 const over = _.curry((lens, transform, root) => {
     return lens(y => Identity(transform(y)), root).value;
 }, 3);
 
-// view<R, T, U>: lens<R, T, U> => root<R> => sub_root<U>
-// lens<R, T, U>: intoFunctor<T, U> => root<R> => Functor<U>
-// intoFunctor<T, U>: sub_root<T> => Functor<U>
+// view :: lens -> R -> T
+// lens :: Functor f => intoFunctor -> R -> f T
+// intoFunctor :: Functor f => U -> f T
+//
+// T := value_at_path
+// R := root
+// f T := Functor<T>
+// f U := Functor<U>
 const view = _.curry((lens, root) => {
     return lens(Const, root).value;
 }, 2);
 
-// set<R, T, U>: lens<R, T, U> => newValue<U> => root<R> => newRoot<R>
-// lens<R, T, U>: intoFunctor<T, U> => root<R> => Functor<U>
-// intoFunctor<T, U>: sub_root<T> => Functor<U>
+
+// set :: lens -> U -> R -> R'
+// lens :: Functor f => intoFunctor -> R -> f R'
+// intoFunctor :: Functor f => T -> f U
+//
+// R := root
+// R' := newRoot
+// U := newValue
+// f U := Functor<U>
+// f R' := Functor<R'>
 const set = _.curry((lens, newValue, root) => {
     return over(lens, _K(newValue), root);
 }, 3);
