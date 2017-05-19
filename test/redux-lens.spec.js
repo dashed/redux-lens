@@ -3,6 +3,7 @@
 const chai = require('chai');
 const expect = chai.expect;
 const createStore = require('redux').createStore;
+const _ = require('lodash');
 
 // http://stackoverflow.com/a/16060619/412627
 function requireUncached(module){
@@ -47,7 +48,7 @@ describe('redux-lens', function() {
             counter: 9000
         };
 
-        const reducer = reduxLens.createReducer({
+        const {reducer} = reduxLens.createReducer({
             reducer: defaultReducer,
             aliases: {
 
@@ -335,10 +336,10 @@ describe('redux-lens', function() {
         [
             ['using path string', 'foo.bar'],
             ['using path array', ['foo', 'bar']],
-            ['using lensPath', reduxLens.path(['foo', 'bar'])]].forEach((tuple) => {
+            ['using lensPath', _ => ['foo', 'bar']]].forEach((tuple) => {
 
             const description = tuple[0];
-            const path = tuple[1];
+            let path = tuple[1];
 
             it(description, () => {
 
@@ -352,21 +353,28 @@ describe('redux-lens', function() {
                 expect(GET_RETURN).to.not.equal(REDUCER_RETURN);
                 expect(SET_RETURN).to.not.equal(REDUCER_RETURN);
 
-                const reducer = createReducer({
+                const expected_path = _.isFunction(path) ? path() : path;
+
+                const getter = (__path, state) => {
+                    get_calls++;
+                    expect(state).to.eql({ foo: {bar: 42}});
+                    expect(__path).to.eql(expected_path);
+                    return GET_RETURN;
+                };
+
+                const setter = (__path, new_value, state) => {
+                    set_calls++;
+                    expect(state).to.eql({ foo: {bar: 42}});
+                    expect(__path).to.eql(expected_path);
+                    expect(new_value).to.equal(REDUCER_RETURN);
+                    return SET_RETURN;
+                };
+
+
+                const {reducer} = createReducer({
                     reducer: defaultReducer,
-                    get(state, __path) {
-                        get_calls++;
-                        expect(state).to.eql({ foo: {bar: 42}});
-                        expect(__path).to.eql(path);
-                        return GET_RETURN;
-                    },
-                    set(state, __path, new_value) {
-                        set_calls++;
-                        expect(state).to.eql({ foo: {bar: 42}});
-                        expect(__path).to.eql(path);
-                        expect(new_value).to.equal(REDUCER_RETURN);
-                        return SET_RETURN;
-                    },
+                    get: getter,
+                    set: setter,
                 });
 
                 const initialState = {
@@ -388,12 +396,15 @@ describe('redux-lens', function() {
                 expect(get_calls).to.eql(0);
                 expect(set_calls).to.eql(0);
 
-                __store.dispatch(reduceIn(path, probe, action));
+
+                const resolved_path = _.isFunction(path) ? reduxLens.path(path(), getter, setter) : path;
+
+                __store.dispatch(reduceIn(resolved_path, probe, action));
 
                 const actual = __store.getState();
                 expect(actual).to.eql(SET_RETURN);
 
-                expect(get_calls).to.eql(1);
+                expect(get_calls).to.eql(2);
                 expect(set_calls).to.eql(1);
 
             });

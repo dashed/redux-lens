@@ -11,10 +11,10 @@ const lodashSetIn = require('lodash/set');
 
 /* helpers */
 
-const __getIn = (rootData, path) => {
+const getInLens = (rootData, path, getter = void 0, setter = void 0) => {
 
     const lens = isFunction(path) ? path : // assume `path` is a lensPath-like.
-        L.lensPath(path);
+        L.lensPath(path, getter, setter);
 
     return L.view(lens, rootData);
 };
@@ -22,10 +22,10 @@ const __getIn = (rootData, path) => {
 // NOTE:
 // - should return new object.
 // - should NOT edit rootData in-place
-const __setIn = (rootData, path, newValue) => {
+const setInLens = (rootData, path, newValue, getter = void 0, setter = void 0) => {
 
     const lens = isFunction(path) ? path : // assume `path` is lensPath-like.
-        L.lensPath(path);
+        L.lensPath(path, getter, setter);
 
     return L.set(lens, newValue, rootData);
 };
@@ -71,7 +71,7 @@ const isReduceInAction = (action) => {
         reducer !== NOT_SET;
 };
 
-const applyReduceInAction = (getIn, setIn) => (state, action) => {
+const applyReduceInAction = (getter, setter) => (state, action) => {
 
     // invariant: lodashGetIn(action, ['meta', '__redux_lens__'], NOT_SET) !== NOT_SET
 
@@ -82,7 +82,7 @@ const applyReduceInAction = (getIn, setIn) => (state, action) => {
 
     // TODO: if meta prop didn't exist in the original action; then it'll be an empty object.
 
-    const oldValue = getIn(state, path);
+    const oldValue = getInLens(state, path, getter, setter);
     const newValue = reducer(oldValue, action);
 
     if(oldValue === newValue) {
@@ -90,7 +90,7 @@ const applyReduceInAction = (getIn, setIn) => (state, action) => {
         return state;
     }
 
-    const newRoot = setIn(state, path, newValue);
+    const newRoot = setInLens(state, path, newValue, getter, setter);
 
     return newRoot;
 };
@@ -119,11 +119,11 @@ const applyAliases = (action, aliases) => {
 
 const createReducer = (options) => {
 
-    const setIn = lodashGetIn(options, ['set'], __setIn);
-    const getIn = lodashGetIn(options, ['get'], __getIn);
+    const setter = lodashGetIn(options, ['set'], void 0);
+    const getter = lodashGetIn(options, ['get'], void 0);
     const aliases = lodashGetIn(options, ['aliases'], NOT_SET);
 
-    const __applyReduceInAction = applyReduceInAction(getIn, setIn);
+    const __applyReduceInAction = applyReduceInAction(getter, setter);
 
     const reducer = (state, action) => {
 
@@ -144,7 +144,14 @@ const createReducer = (options) => {
         return reducer(state, action);
     };
 
-    return reducer;
+    const lensPath = (path, __getter = getter, __setter = setter) => {
+        return L.lensPath(path, __getter, __setter);
+    };
+
+    return {
+        reducer,
+        path: lensPath
+    };
 }
 
 /* exports */
