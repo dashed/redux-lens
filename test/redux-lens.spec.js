@@ -4,6 +4,12 @@ const chai = require('chai');
 const expect = chai.expect;
 const createStore = require('redux').createStore;
 
+// http://stackoverflow.com/a/16060619/412627
+function requireUncached(module){
+    delete require.cache[require.resolve(module)]
+    return require(module)
+}
+
 const defaultReducer = (state) => {
     return state;
 };
@@ -12,15 +18,21 @@ describe('redux-lens', function() {
 
     let reduceIn;
     let createReducer
+    let lensPath;
+
     let store;
     let addAction;
     let initialState;
 
+
     beforeEach(() => {
-        const reduxLens = require('../src/index.js');
+
+        // TODO: explicit refresh
+        const reduxLens = requireUncached('../src/index.js');
 
         reduceIn = reduxLens.reduceIn;
         createReducer = reduxLens.createReducer;
+        lensPath = reduxLens.path;
 
         addAction = {
             type: 'ADD'
@@ -62,90 +74,200 @@ describe('redux-lens', function() {
         store = createStore(reducer, initialState);
     });
 
-    it('update at root path', () => {
+    describe('update with path', function() {
 
-        const prev = store.getState();
-        expect(prev).to.eql(initialState);
+        it('root path using array (i.e. [] )', () => {
 
-        store.dispatch(reduceIn([], 'bamboozle', addAction));
+            const prev = store.getState();
+            expect(prev).to.eql(initialState);
 
-        const expected = 'bamboozle';
-        const actual = store.getState();
+            store.dispatch(reduceIn([], 'bamboozle', addAction));
 
-        expect(actual).to.eql(expected);
-    });
+            const expected = 'bamboozle';
+            const actual = store.getState();
 
-    it('update at non-existent path', () => {
+            expect(actual).to.eql(expected);
+        });
 
-        const prev = store.getState();
-        expect(prev).to.eql(initialState);
+        it('root path using lensPath (i.e. lensPath([]) )', () => {
 
-        store.dispatch(reduceIn(['path', 'to', 'unknown'], 'bamboozle', addAction));
+            const prev = store.getState();
+            expect(prev).to.eql(initialState);
 
-        const expected = {
-            foo: {
-                bar: {
-                    baz: [1, 42, {qux: 33}]
-                }
-            },
-            counter: 9000,
-            path: {
-                to: {
-                    unknown: 'bamboozle'
-                }
-            }
-        };
+            const path = lensPath([]);
+            store.dispatch(reduceIn(path, 'bamboozle', addAction));
 
-        const actual = store.getState();
+            const expected = 'bamboozle';
+            const actual = store.getState();
 
-        expect(actual).to.eql(expected);
-    });
+            expect(actual).to.eql(expected);
+        });
 
-    it('should throw on unknown alias', () => {
 
-        const prev = store.getState();
-        expect(prev).to.eql(initialState);
+        it('at non-existent path using array', () => {
 
-        const throwable = function() {
-            store.dispatch(reduceIn(['path', 'to', 'state'], 'unknown alias', addAction));
-        }
+            const prev = store.getState();
+            expect(prev).to.eql(initialState);
 
-        expect(throwable).to.throw(Error);
-    });
+            store.dispatch(reduceIn(['path', 'to', 'unknown'], 'bamboozle', addAction));
 
-    it('should throw when alias resolves to a non-function value', () => {
-
-        const prev = store.getState();
-        expect(prev).to.eql(initialState);
-
-        const throwable = function() {
-            store.dispatch(reduceIn(['path', 'to', 'state'], 'not_a_reducer', addAction));
-        }
-
-        expect(throwable).to.throw(Error);
-    });
-
-    it('reduceIn should throw on non FSA actions', () => {
-
-        const prev = store.getState();
-        expect(prev).to.eql(initialState);
-
-        const throwable = function() {
-
-            const addReduce = (state = 0, action) => {
-                switch(action.type) {
-                    case 'ADD': {
-                        return state + 1;
+            const expected = {
+                foo: {
+                    bar: {
+                        baz: [1, 42, {qux: 33}]
+                    }
+                },
+                counter: 9000,
+                path: {
+                    to: {
+                        unknown: 'bamboozle'
                     }
                 }
-
-                return state;
             };
 
-            store.dispatch(reduceIn(['path', 'to', 'state'], addReduce, true));
-        }
+            const actual = store.getState();
 
-        expect(throwable).to.throw(Error);
+            expect(actual).to.eql(expected);
+        });
+
+
+        it('at non-existent path using lensPath', () => {
+
+            const prev = store.getState();
+            expect(prev).to.eql(initialState);
+
+            const path = lensPath(['path', 'to', 'unknown']);
+            store.dispatch(reduceIn(path, 'bamboozle', addAction));
+
+            const expected = {
+                foo: {
+                    bar: {
+                        baz: [1, 42, {qux: 33}]
+                    }
+                },
+                counter: 9000,
+                path: {
+                    to: {
+                        unknown: 'bamboozle'
+                    }
+                }
+            };
+
+            const actual = store.getState();
+
+            expect(actual).to.eql(expected);
+        });
+
+    });
+
+    describe('should throw on unknown alias', () => {
+
+        it('using path array', () => {
+
+            const prev = store.getState();
+            expect(prev).to.eql(initialState);
+
+            const throwable = function() {
+                store.dispatch(reduceIn(['path', 'to', 'state'], 'unknown alias', addAction));
+            }
+
+            expect(throwable).to.throw(Error);
+        });
+
+        it('using lensPath', () => {
+
+            const prev = store.getState();
+            expect(prev).to.eql(initialState);
+
+            const throwable = function() {
+                const path = lensPath(['path', 'to', 'state']);
+                store.dispatch(reduceIn(path, 'unknown alias', addAction));
+            }
+
+            expect(throwable).to.throw(Error);
+        });
+
+    });
+
+    describe('should throw when alias resolves to a non-function value', () => {
+
+        it('using path array', () => {
+
+            const prev = store.getState();
+            expect(prev).to.eql(initialState);
+
+            const throwable = function() {
+                store.dispatch(reduceIn(['path', 'to', 'state'], 'not_a_reducer', addAction));
+            }
+
+            expect(throwable).to.throw(Error);
+        });
+
+        it('using lensPath', () => {
+
+            const prev = store.getState();
+            expect(prev).to.eql(initialState);
+
+            const throwable = function() {
+                const path = lensPath(['path', 'to', 'state']);
+                store.dispatch(reduceIn(path, 'not_a_reducer', addAction));
+            }
+
+            expect(throwable).to.throw(Error);
+        });
+
+    });
+
+    describe('reduceIn should throw on non FSA actions', () => {
+
+        it('using array path', () => {
+
+            const prev = store.getState();
+            expect(prev).to.eql(initialState);
+
+            const throwable = function() {
+
+                const addReduce = (state = 0, action) => {
+                    switch(action.type) {
+                        case 'ADD': {
+                            return state + 1;
+                        }
+                    }
+
+                    return state;
+                };
+
+                store.dispatch(reduceIn(['path', 'to', 'state'], addReduce, true));
+            }
+
+            expect(throwable).to.throw(Error);
+        });
+
+        it('using lensPath', () => {
+
+            const prev = store.getState();
+            expect(prev).to.eql(initialState);
+
+            const throwable = function() {
+
+                const addReduce = (state = 0, action) => {
+                    switch(action.type) {
+                        case 'ADD': {
+                            return state + 1;
+                        }
+                    }
+
+                    return state;
+                };
+
+                const path = lensPath(['path', 'to', 'state']);
+
+                store.dispatch(reduceIn(path, addReduce, true));
+            }
+
+            expect(throwable).to.throw(Error);
+        });
+
     });
 
     it('update at existing path using an alias', () => {
@@ -154,6 +276,7 @@ describe('redux-lens', function() {
         expect(prev).to.eql(initialState);
 
         store.dispatch(reduceIn(['foo', 'bar', 'baz', 1], 'bamboozle', addAction));
+        store.dispatch(reduceIn(lensPath(['foo', 'bar', 'baz', 0]), 'plusTwo', addAction));
         store.dispatch(reduceIn('foo.bar.baz[0]', 'plusTwo', addAction));
 
         const actual = store.getState();
@@ -161,7 +284,7 @@ describe('redux-lens', function() {
         const expected = {
             foo: {
                 bar: {
-                    baz: [3, 'bamboozle', {qux: 33}]
+                    baz: [5, 'bamboozle', {qux: 33}]
                 }
             },
             counter: 9000
@@ -189,13 +312,14 @@ describe('redux-lens', function() {
         store.dispatch(reduceIn('foo.bar.baz[1]', addReduce, addAction));
         store.dispatch(reduceIn('foo.bar.baz[2].qux', addReduce, addAction));
         store.dispatch(reduceIn(['foo', 'bar', 'baz', 2, 'qux'], addReduce, addAction));
+        store.dispatch(reduceIn(lensPath(['foo', 'bar', 'baz', 1]), addReduce, addAction));
 
         const actual = store.getState();
 
         const expected = {
             foo: {
                 bar: {
-                    baz: [1, 44, {qux: 35}]
+                    baz: [1, 45, {qux: 35}]
                 }
             },
             counter: 9000
@@ -204,61 +328,78 @@ describe('redux-lens', function() {
         expect(actual).to.eql(expected);
     });
 
-    it('should be able to configure getters / setters', () => {
+    describe('should be able to configure getters / setters', () => {
 
-        let get_calls = 0;
-        let set_calls = 0;
-        const GET_RETURN = {};
-        const SET_RETURN = {};
-        const REDUCER_RETURN = {};
+        const reduxLens = requireUncached('../src/index.js');
 
-        expect(GET_RETURN).to.not.equal(SET_RETURN);
-        expect(GET_RETURN).to.not.equal(REDUCER_RETURN);
-        expect(SET_RETURN).to.not.equal(REDUCER_RETURN);
+        [
+            ['using path string', 'foo.bar'],
+            ['using path array', ['foo', 'bar']],
+            ['using lensPath', reduxLens.path(['foo', 'bar'])]].forEach((tuple) => {
 
-        const reducer = createReducer({
-            reducer: defaultReducer,
-            get(state, path) {
-                get_calls++;
-                expect(state).to.eql({ foo: {bar: 42}});
-                expect(path).to.equal('foo.bar');
-                return GET_RETURN;
-            },
-            set(state, path, new_value) {
-                set_calls++;
-                expect(state).to.eql({ foo: {bar: 42}});
-                expect(path).to.equal('foo.bar');
-                expect(new_value).to.equal(REDUCER_RETURN);
-                return SET_RETURN;
-            },
+            const description = tuple[0];
+            const path = tuple[1];
+
+            it(description, () => {
+
+                let get_calls = 0;
+                let set_calls = 0;
+                const GET_RETURN = {};
+                const SET_RETURN = {};
+                const REDUCER_RETURN = {};
+
+                expect(GET_RETURN).to.not.equal(SET_RETURN);
+                expect(GET_RETURN).to.not.equal(REDUCER_RETURN);
+                expect(SET_RETURN).to.not.equal(REDUCER_RETURN);
+
+                const reducer = createReducer({
+                    reducer: defaultReducer,
+                    get(state, __path) {
+                        get_calls++;
+                        expect(state).to.eql({ foo: {bar: 42}});
+                        expect(__path).to.eql(path);
+                        return GET_RETURN;
+                    },
+                    set(state, __path, new_value) {
+                        set_calls++;
+                        expect(state).to.eql({ foo: {bar: 42}});
+                        expect(__path).to.eql(path);
+                        expect(new_value).to.equal(REDUCER_RETURN);
+                        return SET_RETURN;
+                    },
+                });
+
+                const initialState = {
+                    foo: {
+                        bar: 42
+                    }
+                };
+
+                const __store = createStore(reducer, initialState);
+
+                const action = { type: 'foo', meta: {}};
+                const probe = (state, __action) => {
+                    expect(__action).to.eql(action);
+
+                    expect(state).to.equal(GET_RETURN);
+                    return REDUCER_RETURN;
+                }
+
+                expect(get_calls).to.eql(0);
+                expect(set_calls).to.eql(0);
+
+                __store.dispatch(reduceIn(path, probe, action));
+
+                const actual = __store.getState();
+                expect(actual).to.eql(SET_RETURN);
+
+                expect(get_calls).to.eql(1);
+                expect(set_calls).to.eql(1);
+
+            });
+
         });
 
-        const initialState = {
-            foo: {
-                bar: 42
-            }
-        };
-
-        const __store = createStore(reducer, initialState);
-
-        const action = { type: 'foo', meta: {}};
-        const probe = (state, __action) => {
-            expect(__action).to.eql(action);
-
-            expect(state).to.eql(GET_RETURN);
-            return REDUCER_RETURN;
-        }
-
-        expect(get_calls).to.eql(0);
-        expect(set_calls).to.eql(0);
-
-        __store.dispatch(reduceIn('foo.bar', probe, action));
-
-        const actual = __store.getState();
-        expect(actual).to.eql(SET_RETURN);
-
-        expect(get_calls).to.eql(1);
-        expect(set_calls).to.eql(1);
-
     });
+
 });

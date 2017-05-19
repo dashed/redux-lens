@@ -12,7 +12,10 @@ const lodashSetIn = require('lodash/set');
 /* helpers */
 
 const __getIn = (rootData, path) => {
-    const lens = L.lensPath(path);
+
+    const lens = isFunction(path) ? path : // assume `path` is a lensPath-like.
+        L.lensPath(path);
+
     return L.view(lens, rootData);
 };
 
@@ -20,7 +23,10 @@ const __getIn = (rootData, path) => {
 // - should return new object.
 // - should NOT edit rootData in-place
 const __setIn = (rootData, path, newValue) => {
-    const lens = L.lensPath(path);
+
+    const lens = isFunction(path) ? path : // assume `path` is lensPath-like.
+        L.lensPath(path);
+
     return L.set(lens, newValue, rootData);
 };
 
@@ -145,5 +151,6 @@ const createReducer = (options) => {
 
 module.exports = {
     createReducer,
-    reduceIn
+    reduceIn,
+    path: L.lensPath
 };
