@@ -152,7 +152,9 @@ Returns:
 
 Creates a function (i.e. `lensPath`) whose focus is at the specified path, `path_to_state`.
 
-`getter` and `setter` functions are optional.
+- `getter :: (path, state) => value`
+- `setter :: (path, new_value, state) => next_state`
+- `getter` and `setter` functions are optional. If they are not set, then internal functions will be provided and will assume redux store state are plain objects.
 
 Similar to: http://ramdajs.com/docs/#lensPath
 
@@ -174,7 +176,7 @@ R' := newRoot
 f T := Functor<T>
 f U := Functor<U>
 
-Functor<T>: {
+Functor<T> := {
     value: T,
     map: mapf -> Functor<U>
 }
